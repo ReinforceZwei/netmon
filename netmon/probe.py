@@ -356,14 +356,24 @@ class ProbeEngine:
                     days.append(day)
         out = []
         for day in days:
-            if day not in sent and day not in out:
-                # only days we actually have data for
-                bounds = self.db.coverage(
-                    int(datetime.strptime(day, "%Y%m%d").timestamp()),
-                    int((datetime.strptime(day, "%Y%m%d") + timedelta(days=1)).timestamp()),
-                )
-                if bounds["samples"]:
-                    out.append(day)
+            if day in out:
+                continue
+            stored = sent.get(day)
+            if stored is not None:
+                if stored.get("ok"):
+                    continue  # already delivered
+                # a FAILED send is retried after a cooldown (Discord hiccup,
+                # temporary network loss) instead of silently skipping the day
+                sent_at = _parse_iso(stored.get("sent_ts"))
+                if sent_at and (now - sent_at) < timedelta(minutes=30):
+                    continue
+            # only days we actually have data for
+            bounds = self.db.coverage(
+                int(datetime.strptime(day, "%Y%m%d").timestamp()),
+                int((datetime.strptime(day, "%Y%m%d") + timedelta(days=1)).timestamp()),
+            )
+            if bounds["samples"]:
+                out.append(day)
         return sorted(out)
 
     def _maybe_send_digests(self) -> None:
@@ -443,6 +453,19 @@ def _num(value):
         return round(float(value), 2)
     except (TypeError, ValueError):
         return None
+
+
+def _parse_iso(value) -> datetime | None:
+    """Parse a stored ISO timestamp (with offset) into an aware datetime."""
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value))
+    except (ValueError, TypeError):
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.astimezone()
+    return parsed
 
 
 def _parse_hhmm(value: str) -> tuple[int, int]:

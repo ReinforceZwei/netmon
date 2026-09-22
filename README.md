@@ -33,18 +33,20 @@ services:
     build: .
     container_name: netmon
     restart: unless-stopped
+    network_mode: host          # probes measure the host's real path
     environment:
-      TZ: Asia/Taipei        # local time for the daily report + charts
+      TZ: Asia/Taipei           # local time for the daily report + charts
       NETMON_DATA_DIR: /data
-    ports:
-      - "9120:9120"
+      NETMON_PORT: "9120"
     volumes:
       - ./data:/data
     cap_add:
-      - NET_RAW            # ICMP without running as root
+      - NET_RAW                 # ICMP
 ```
 
-Deliberately **not** attached to a VPN container's network namespace (gluetun or similar): probes must measure the real WAN path, not the tunnel.
+**Why host networking:** a latency monitor must measure the *host's* path. On a bridge network the probes take an extra NAT hop, and gateway auto-detection would find the docker bridge (`172.17.0.1`) instead of your router, so LAN faults would look like WAN faults. With `network_mode: host` the container uses the host's routing and its real default gateway. (Bridge also works — drop `network_mode`, add a `ports: ["9120:9120"]` mapping, and put your router IP in the target list by hand.)
+
+Either way, **do not** attach this container to a VPN container's network namespace (gluetun etc.): every probe would then measure the tunnel instead of your ISP link.
 
 ## Configuration
 

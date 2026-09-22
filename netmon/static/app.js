@@ -146,19 +146,21 @@ async function loadSeries(range, frm, to) {
   const data = await api(`/api/series?${params.toString()}`);
   currentRange = range;
 
-  const epochs = new Set();
-  Object.values(data.latency).forEach((pts) => pts.forEach((p) => epochs.add(p[0])));
-  const labels = [...epochs].sort((a, b) => a - b);
+  const bucket = data.range.bucket;
+  // Build the label grid from the REQUESTED window, not from the buckets that
+  // happen to have data: otherwise 15 minutes of samples look like a full day.
+  const startBucket = Math.floor(data.range.from / bucket) * bucket;
+  const labels = [];
+  for (let e = startBucket; e <= data.range.to; e += bucket) labels.push(e);
   const index = new Map(labels.map((e, i) => [e, i]));
   const labelText = labels.map((e) => fmtTime(e));
-  const bucket = data.range.bucket;
   $('range-info').textContent =
     `${fmtTime(data.range.from)} → ${fmtTime(data.range.to)} · ${labels.length} buckets of ${bucket}s · ` +
     `${data.summary.coverage.samples.toLocaleString()} samples · ${data.speedtests.length} speedtests`;
 
   const datasets = Object.entries(data.latency).map(([target, pts], i) => {
     const values = new Array(labels.length).fill(null);
-    pts.forEach((p) => { values[index.get(p[0])] = p[1]; });
+    pts.forEach((p) => { if (index.has(p[0])) values[index.get(p[0])] = p[1]; });
     return {
       label: target, data: values, borderColor: PALETTE[i % PALETTE.length],
       backgroundColor: PALETTE[i % PALETTE.length], borderWidth: 1.6,
@@ -178,7 +180,7 @@ async function loadSeries(range, frm, to) {
 
   const lossDatasets = Object.entries(data.latency).map(([target, pts], i) => {
     const values = new Array(labels.length).fill(null);
-    pts.forEach((p) => { values[index.get(p[0])] = p[2]; });
+    pts.forEach((p) => { if (index.has(p[0])) values[index.get(p[0])] = p[2]; });
     return {
       label: target, data: values, borderColor: PALETTE[i % PALETTE.length],
       backgroundColor: PALETTE[i % PALETTE.length] + '55', borderWidth: 1.2,

@@ -4,8 +4,15 @@ services:
     image: netmon:latest
     container_name: netmon
     restart: unless-stopped
-    # Deliberately NOT in gluetun's network namespace: probes must measure the
-    # real WAN, not the VPN tunnel. Default bridge -> host's normal routing.
+    # Host networking on purpose:
+    #  - latency probes measure the host's real path (no docker NAT hop)
+    #  - default-gateway auto-detection finds the actual LAN router instead of
+    #    the docker bridge, so LAN faults stay separate from WAN faults
+    # Deliberately NOT gluetun's namespace either: probes must not go through
+    # the VPN tunnel. If you must use bridge networking instead, drop
+    # network_mode + re-add the ports mapping, and put your router IP in the
+    # target list by hand (auto-detection would report the docker bridge).
+    network_mode: host
     environment:
       TZ: ${TZ:-Asia/Taipei}
       NETMON_DATA_DIR: /data
@@ -13,13 +20,8 @@ services:
       # Optional bootstrap (ignored once settings exist in the database):
       # NETMON_TARGETS: "1.1.1.1,8.8.8.8"
       # NETMON_WEBHOOK_URL: "https://discord.com/api/webhooks/…"
-    ports:
-      - "9120:9120"
     volumes:
       - ./data:/data
     cap_add:
-      - NET_RAW          # ICMP raw sockets (the container runs as root, which
-                         # already has it; kept explicit so hardened daemon
-                         # defaults or a future non-root user still work)
-    security_opt:
-      - no-new-privileges:false
+      - NET_RAW          # ICMP raw sockets (explicit; the container runs as
+                         # root, so this only matters if you harden defaults)

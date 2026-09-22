@@ -7,11 +7,12 @@ ENV PYTHONUNBUFFERED=1 \
     NETMON_PORT=9120 \
     MPLBACKEND=Agg
 
-# iputils-ping: the probe shells out to `ping` (no root needed for raw sockets,
-# Debian's ping carries cap_net_raw). curl: Discord webhook POSTs (Python's TLS
-# fingerprint gets 403'd by Cloudflare) + container healthcheck.
+# iputils-ping: the probe shells out to `ping` (Debian's ping works unprivileged
+# via net.ipv4.ping_group_range, which Docker sets). iproute2: `ip route` for
+# default-gateway auto-detection. curl: Discord webhook POSTs (Python's TLS
+# fingerprint gets 403'd by Cloudflare) + the container healthcheck.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends iputils-ping curl ca-certificates tzdata \
+ && apt-get install -y --no-install-recommends iputils-ping iproute2 curl ca-certificates tzdata \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

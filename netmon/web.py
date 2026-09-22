@@ -399,6 +399,15 @@ async def api_set_settings(payload: dict = Body(default={})):
     patch.pop("defaults", None)
 
     merged = settings.save(patch)
+    auth_cfg = merged.get("auth", {})
+    if auth_cfg.get("enabled") and not auth_cfg.get("password_hash"):
+        # Never leave the dashboard locked with no password: that is an
+        # instant lockout with no way back in short of editing the DB.
+        settings.save({"auth": {"enabled": False}})
+        raise HTTPException(
+            status_code=400,
+            detail="set a password before enabling authentication (nothing was changed)",
+        )
     get_probe().reload_settings()
     get_db().add_event("info", "settings updated from dashboard")
     return {"ok": True, "settings": _redact(merged)}
