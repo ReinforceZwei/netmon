@@ -8,4 +8,4 @@ Reuses the probe/report/notify engine proven on the 5G trial monitor
 (github.com/ReinforceZwei/5g-network-test).
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
