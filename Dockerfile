@@ -26,6 +26,26 @@ RUN mkdir -p /data/reports
 VOLUME ["/data"]
 EXPOSE 9120
 
+# Build metadata, passed by the release workflow (harmless defaults for a local
+# build). Kept at the end of the file so a new release only rebuilds these
+# trivial layers instead of invalidating the dependency install.
+ARG APP_VERSION=dev
+ARG COMMIT=unknown
+ARG BUILD_DATE=unknown
+
+LABEL org.opencontainers.image.title="netmon" \
+      org.opencontainers.image.description="Self-hosted home network quality monitor: latency probes, optional speedtests, daily Discord report, web dashboard" \
+      org.opencontainers.image.url="https://github.com/ReinforceZwei/netmon" \
+      org.opencontainers.image.source="https://github.com/ReinforceZwei/netmon" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${COMMIT}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.licenses="MIT"
+
+ENV NETMON_BUILD_VERSION=${APP_VERSION} \
+    NETMON_BUILD_COMMIT=${COMMIT} \
+    NETMON_BUILD_DATE=${BUILD_DATE}
+
 HEALTHCHECK --interval=60s --timeout=10s --start-period=25s --retries=3 \
   CMD curl -fsS http://127.0.0.1:9120/api/health || exit 1
 

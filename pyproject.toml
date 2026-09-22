@@ -4,9 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "netmon"
-version = "1.0.0"
 description = "Self-hosted home network quality monitor: latency probes, optional speedtests, daily Discord report, web dashboard"
 requires-python = ">=3.10"
+# Version lives in netmon/__init__.py only (release.sh bumps it there).
+dynamic = ["version"]
 dependencies = [
     "fastapi>=0.115,<1",
     "uvicorn[standard]>=0.30,<1",
@@ -20,6 +21,9 @@ netmon = "netmon.web:main"
 
 [tool.setuptools]
 packages = ["netmon"]
+
+[tool.setuptools.dynamic]
+version = { attr = "netmon.__version__" }
 
 [tool.setuptools.package-data]
 netmon = ["templates/*.html", "static/*"]

@@ -25,6 +25,38 @@ Then open `http://<host>:9120/`, go to **Settings**, paste your Discord webhook 
 
 > Speedtests are **disabled** by default. Enable "run speedtests on a schedule" in Settings, or press **Run speedtest now** on the dashboard when you want one.
 
+Or run the released image instead of building:
+
+```bash
+docker pull ghcr.io/reinforcezwei/netmon:latest   # linux/amd64 + linux/arm64
+```
+
+## Releases & Docker images
+
+Images are built by GitHub Actions **only on `v*` tags** (never from branch commits), as multi-arch `linux/amd64` + `linux/arm64`:
+
+```
+ghcr.io/reinforcezwei/netmon:1.0.0     # exact release
+ghcr.io/reinforcezwei/netmon:1.0       # minor track
+ghcr.io/reinforcezwei/netmon:1         # major track
+ghcr.io/reinforcezwei/netmon:latest
+```
+
+Updating a running deployment:
+
+```bash
+docker compose pull && docker compose up -d
+```
+
+Cutting a release — bumps the version in `netmon/__init__.py` (the single source of truth; `pyproject.toml` reads it dynamically), commits, tags, and optionally pushes. The push triggers `.github/workflows/docker.yml`, which builds + pushes the image and creates the GitHub Release with the commit list since the previous tag:
+
+```bash
+./release.sh patch --push        # bash;  patch|minor|major
+.\release.ps1 -Bump patch -Push  # PowerShell
+```
+
+The image carries `org.opencontainers.image.*` labels plus `NETMON_BUILD_VERSION` / `NETMON_BUILD_COMMIT`, so a deployed container reports exactly which release it is (visible in `GET /api/health` and the dashboard header).
+
 ### Compose
 
 ```yaml

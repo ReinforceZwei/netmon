@@ -1,7 +1,10 @@
 services:
   netmon:
+    # Published by the release workflow on v* tags (linux/amd64 + linux/arm64).
+    # `docker compose pull && docker compose up -d` gets the newest release;
+    # `docker compose up -d --build` builds from this checkout instead.
+    image: ghcr.io/reinforcezwei/netmon:latest
     build: .
-    image: netmon:latest
     container_name: netmon
     restart: unless-stopped
     # Host networking on purpose:

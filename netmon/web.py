@@ -39,6 +39,21 @@ RANGES = {
 }
 BUCKETS = [30, 60, 120, 300, 600, 900, 1800, 3600, 10800, 21600, 43200, 86400]
 
+# Injected by the release workflow (see Dockerfile); empty for a source checkout.
+BUILD_VERSION = (os.environ.get("NETMON_BUILD_VERSION") or "").strip()
+BUILD_COMMIT = (os.environ.get("NETMON_BUILD_COMMIT") or "").strip()
+
+
+def version_string() -> str:
+    """Version shown in the UI: the released tag/commit when the image has one."""
+    version = BUILD_VERSION if BUILD_VERSION not in ("", "dev", "unknown") else __version__
+    if BUILD_COMMIT not in ("", "unknown"):
+        return f"{version} ({BUILD_COMMIT[:7]})"
+    return version
+
+
+VERSION = version_string()
+
 _engines = {"db": None, "settings": None, "probe": None}
 
 
@@ -157,7 +172,7 @@ async def lifespan(app: FastAPI):
         probe.stop()
 
 
-app = FastAPI(title="netmon", version=__version__, lifespan=lifespan)
+app = FastAPI(title="netmon", version=VERSION, lifespan=lifespan)
 app.add_middleware(BasicAuthMiddleware)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -172,7 +187,7 @@ async def dashboard(request: Request):
         request,
         "dashboard.html",
         {
-            "version": __version__,
+            "version": VERSION,
             "settings": settings.data,
             "default_range": settings.data.get("ui", {}).get("default_range", "24h"),
             "ranges": list(RANGES.keys()),
@@ -185,7 +200,7 @@ async def settings_page(request: Request):
     return templates.TemplateResponse(
         request,
         "settings.html",
-        {"version": __version__, "settings": get_settings().data},
+        {"version": VERSION, "settings": get_settings().data},
     )
 
 
@@ -195,7 +210,7 @@ async def data_page(request: Request):
         request,
         "data.html",
         {
-            "version": __version__,
+            "version": VERSION,
             "settings": get_settings().data,
             "counts": get_db().counts(),
             "bounds": get_db().range_bounds(),
@@ -207,7 +222,7 @@ async def data_page(request: Request):
 
 @app.get("/api/health")
 async def health():
-    return {"ok": True, "version": __version__}
+    return {"ok": True, "version": VERSION}
 
 
 @app.get("/api/status")
