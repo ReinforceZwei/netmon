@@ -9,3 +9,6 @@ devdata/
 *.db-shm
 .env
 *.local.json
+
+# editor/agent scratch files
+.hermes-tmp.*
