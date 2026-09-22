@@ -47,6 +47,7 @@ BUILD_COMMIT = (os.environ.get("NETMON_BUILD_COMMIT") or "").strip()
 def version_string() -> str:
     """Version shown in the UI: the released tag/commit when the image has one."""
     version = BUILD_VERSION if BUILD_VERSION not in ("", "dev", "unknown") else __version__
+    version = version.lstrip("v") or __version__  # build arg is the tag: v1.0.1
     if BUILD_COMMIT not in ("", "unknown"):
         return f"{version} ({BUILD_COMMIT[:7]})"
     return version
