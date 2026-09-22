@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% set active = 'dashboard' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<section class="cards" id="cards">
+  <div class="card"><div class="label">Monitor</div><div class="value" id="card-uptime">–</div><div class="sub muted" id="card-monitor-sub">loading…</div></div>
+  <div class="card"><div class="label">Targets (live)</div><div id="card-targets" class="targets">loading…</div></div>
+  <div class="card"><div class="label">Last 24h latency</div><div class="value" id="card-rtt24">–</div><div class="sub muted" id="card-rtt24-sub">avg of all targets</div></div>
+  <div class="card"><div class="label">Last 24h loss</div><div class="value" id="card-loss24">–</div><div class="sub muted" id="card-loss24-sub">worst target</div></div>
+  <div class="card"><div class="label">Last speedtest</div><div class="value" id="card-speed">–</div><div class="sub muted" id="card-speed-sub">not run yet</div></div>
+  <div class="card"><div class="label">Daily report</div><div class="value" id="card-digest">–</div><div class="sub muted" id="card-digest-sub">–</div></div>
+</section>
+
+<section class="panel">
+  <div class="row wrap">
+    <div class="ranges" id="ranges">
+      {% for r in ranges %}<button data-range="{{ r }}" class="range-btn{% if r == default_range %} active{% endif %}">{{ r }}</button>{% endfor %}
+    </div>
+    <div class="custom-range">
+      <label class="small muted">from <input type="datetime-local" id="from"></label>
+      <label class="small muted">to <input type="datetime-local" id="to"></label>
+      <button id="apply-custom" class="btn small-btn">Apply</button>
+    </div>
+  </div>
+  <div class="muted small" id="range-info"></div>
+</section>
+
+<section class="panel">
+  <div class="row space-between">
+    <h2>Speed tests</h2>
+    <div class="row">
+      <label class="switch small muted" title="Disabled by default: a speedtest saturates your link for ~30s">
+        <input type="checkbox" id="speedtest-toggle"> <span>scheduled speedtests</span>
+      </label>
+      <button id="run-speedtest" class="btn">Run speedtest now</button>
+      <button id="send-report" class="btn ghost">Send report now</button>
+    </div>
+  </div>
+  <div class="muted small" id="speedtest-status"></div>
+</section>
+
+<section class="panel">
+  <h2>Latency <span class="muted small">(ms, bucketed average per target)</span></h2>
+  <div class="chart-box"><canvas id="chart-latency"></canvas></div>
+</section>
+
+<section class="panel">
+  <h2>Packet loss <span class="muted small">(%)</span></h2>
+  <div class="chart-box"><canvas id="chart-loss"></canvas></div>
+</section>
+
+<section class="panel">
+  <h2>Throughput <span class="muted small">(Mbps per speedtest)</span></h2>
+  <div class="chart-box"><canvas id="chart-speed"></canvas></div>
+</section>
+
+<section class="panel">
+  <h2>Latency by hour of day <span class="muted small">(last 30 days, all targets)</span></h2>
+  <div class="chart-box short"><canvas id="chart-hourly"></canvas></div>
+</section>
+
+<section class="panel grid2">
+  <div>
+    <h2>Recent speed tests</h2>
+    <div class="table-wrap"><table id="speed-table">
+      <thead><tr><th>time</th><th>dl</th><th>ul</th><th>ping</th><th>jitter</th><th>loss</th><th>server</th></tr></thead>
+      <tbody><tr><td colspan="7" class="muted">loading…</td></tr></tbody>
+    </table></div>
+  </div>
+  <div>
+    <h2>Events &amp; incidents</h2>
+    <ul class="events" id="event-list"><li class="muted">loading…</li></ul>
+  </div>
+</section>
+
+<script src="/static/app.js"></script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% set active = 'settings' %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+
+<section class="panel">
+  <h2>Probe</h2>
+  <div class="form-grid">
+    <label>Ping targets <span class="muted small">(one per line or comma separated)</span>
+      <textarea id="s-targets" rows="4">{{ settings.targets | join('\n') }}</textarea>
+    </label>
+    <label class="check"><input type="checkbox" id="s-gateway" {% if settings.auto_add_gateway %}checked{% endif %}> also probe the default gateway (LAN vs WAN separation)</label>
+    <label>Ping interval (seconds) <input type="number" id="s-ping-interval" min="1" max="600" step="1" value="{{ settings.ping_interval_sec }}"></label>
+    <label>Ping timeout (seconds) <input type="number" id="s-ping-timeout" min="1" max="10" step="1" value="{{ settings.ping_timeout_sec }}"></label>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Speedtests <span class="muted small">— off by default; they saturate the link while running</span></h2>
+  <div class="form-grid">
+    <label class="check"><input type="checkbox" id="s-speed-enabled" {% if settings.speedtest.enabled %}checked{% endif %}> run speedtests on a schedule</label>
+    <label>Interval (minutes) <input type="number" id="s-speed-interval" min="5" max="1440" step="5" value="{{ settings.speedtest.interval_min }}"></label>
+    <label>Timeout (seconds) <input type="number" id="s-speed-timeout" min="30" max="600" step="10" value="{{ settings.speedtest.timeout_sec }}"></label>
+    <label>Ookla CLI binary <span class="muted small">(falls back to speedtest-cli)</span> <input type="text" id="s-speed-ookla" value="{{ settings.speedtest.ookla_bin }}"></label>
+    <label>Warn below download (Mbps) <span class="muted small">(0 = off)</span> <input type="number" id="s-speed-floor" min="0" step="1" value="{{ settings.speedtest.min_download_mbps }}"></label>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Daily Discord report</h2>
+  <div class="form-grid">
+    <label class="check"><input type="checkbox" id="s-digest-enabled" {% if settings.digest.enabled %}checked{% endif %}> send a daily report</label>
+    <label>Send at (local time) <input type="time" id="s-digest-time" value="{{ settings.digest.time }}"></label>
+    <label class="check"><input type="checkbox" id="s-digest-catchup" {% if settings.digest.catch_up %}checked{% endif %}> catch up on days missed while netmon was down</label>
+    <label class="wide">Discord webhook URL
+      <input type="password" id="s-webhook" placeholder="{% if settings.digest.webhook_url %}unchanged (…{{ settings.digest.webhook_url[-6:] }}){% else %}https://discord.com/api/webhooks/…{% endif %}">
+      <span class="muted small">stored in SQLite on this host; leave empty to keep the current value</span>
+    </label>
+    <div class="row">
+      <button id="test-webhook" class="btn ghost">Send test message</button>
+      <span class="muted small" id="webhook-result"></span>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Thresholds &amp; alerts</h2>
+  <div class="form-grid">
+    <label>Max loss % <input type="number" id="s-th-loss" min="0" step="0.1" value="{{ settings.thresholds.loss_pct }}"></label>
+    <label>Max avg ping (ms) <input type="number" id="s-th-ping" min="0" step="1" value="{{ settings.thresholds.avg_ping_ms }}"></label>
+    <label>Min download (Mbps) <input type="number" id="s-th-dl" min="0" step="1" value="{{ settings.thresholds.min_download_mbps }}"></label>
+    <label>Min upload (Mbps) <input type="number" id="s-th-ul" min="0" step="1" value="{{ settings.thresholds.min_upload_mbps }}"></label>
+    <label class="check"><input type="checkbox" id="s-alerts-enabled" {% if settings.alerts.enabled %}checked{% endif %}> instant Discord alert when the link goes down</label>
+    <label>Consecutive failed rounds <input type="number" id="s-alerts-rounds" min="1" max="60" step="1" value="{{ settings.alerts.consecutive_losses }}"></label>
+    <label>Alert cooldown (minutes) <input type="number" id="s-alerts-cooldown" min="1" step="1" value="{{ settings.alerts.cooldown_min }}"></label>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Access</h2>
+  <div class="form-grid">
+    <label class="check"><input type="checkbox" id="s-auth-enabled" {% if settings.auth.enabled %}checked{% endif %}> require a password (HTTP Basic) — recommended if reachable beyond your tailnet</label>
+    <label>Username <input type="text" id="s-auth-user" value="{{ settings.auth.username }}"></label>
+    <label>New password <input type="password" id="s-auth-pass" placeholder="{% if settings.auth.password_hash %}unchanged{% else %}set a password{% endif %}"></label>
+  </div>
+</section>
+
+<div class="row sticky-actions">
+  <button id="save-settings" class="btn primary">Save settings</button>
+  <button id="reload-settings" class="btn ghost">Reload</button>
+  <span class="muted small" id="save-result"></span>
+</div>
+
+<script src="/static/settings.js"></script>
+{% endblock %}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}netmon{% endblock %} · netmon</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/chart.umd.min.js"></script>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="dot" id="health-dot"></span>
+    <a href="/">netmon</a>
+    <span class="muted small">v{{ version }}</span>
+  </div>
+  <nav>
+    <a href="/" class="{% if active == 'dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="/settings" class="{% if active == 'settings' %}active{% endif %}">Settings</a>
+    <a href="/data" class="{% if active == 'data' %}active{% endif %}">Data</a>
+    <a href="/reports/latest.png" target="_blank">Latest report</a>
+  </nav>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer class="muted small">
+  netmon — latency + optional speedtests for your home link · data stays on this host
+</footer>
+</body>
+</html>

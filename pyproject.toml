@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netmon"
+version = "1.0.0"
+description = "Self-hosted home network quality monitor: latency probes, optional speedtests, daily Discord report, web dashboard"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "jinja2>=3.1,<4",
+    "matplotlib>=3.8,<4",
+    "speedtest-cli>=2.1.3",
+]
+
+[project.scripts]
+netmon = "netmon.web:main"
+
+[tool.setuptools]
+packages = ["netmon"]
+
+[tool.setuptools.package-data]
+netmon = ["templates/*.html", "static/*"]

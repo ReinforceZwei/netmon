@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% set active = 'data' %}
+{% block title %}Data{% endblock %}
+{% block content %}
+
+<section class="cards">
+  <div class="card"><div class="label">Ping samples</div><div class="value">{{ '{:,}'.format(counts.ping) }}</div><div class="sub muted">one row per target per round</div></div>
+  <div class="card"><div class="label">Speedtests</div><div class="value">{{ '{:,}'.format(counts.speedtest) }}</div><div class="sub muted">including failures</div></div>
+  <div class="card"><div class="label">Events</div><div class="value">{{ '{:,}'.format(counts.events) }}</div><div class="sub muted">state changes &amp; alerts</div></div>
+  <div class="card"><div class="label">Database</div><div class="value">{{ '%.1f'|format(counts.db_bytes / 1048576) }} MB</div><div class="sub muted">SQLite (WAL) on this host</div></div>
+</section>
+
+<section class="panel">
+  <h2>Coverage</h2>
+  <div class="muted small" id="coverage">
+    {% if bounds.first_epoch %}
+      collecting since <span class="mono" data-epoch="{{ bounds.first_epoch }}"></span>, latest sample <span class="mono" data-epoch="{{ bounds.last_epoch }}"></span>
+    {% else %}
+      no data yet
+    {% endif %}
+  </div>
+  <div class="muted small">Retention: {% if settings.retention_days and settings.retention_days > 0 %}{{ settings.retention_days }} days{% else %}keep everything{% endif %}. Pruning below is manual and immediate.</div>
+</section>
+
+<section class="panel">
+  <h2>Prune history</h2>
+  <div class="row wrap">
+    <label class="small muted">delete samples older than <input type="number" id="prune-days" min="1" value="90" style="width:5.5rem"> days</label>
+    <button id="prune-days-btn" class="btn">Prune</button>
+    <span class="spacer"></span>
+    <button id="prune-all-btn" class="btn danger">Delete all history</button>
+  </div>
+  <div class="muted small">Useful for a fresh measurement window (e.g. after an ISP change). Pruning is immediate: the running probe keeps collecting, and any new sample older than the cutoff is removed too.</div>
+  <div class="muted small" id="prune-result"></div>
+</section>
+
+<section class="panel">
+  <h2>Export</h2>
+  <div class="row wrap">
+    <button class="btn ghost export-btn" data-table="ping" data-days="0">Ping (all)</button>
+    <button class="btn ghost export-btn" data-table="ping" data-days="7">Ping (7d)</button>
+    <button class="btn ghost export-btn" data-table="speedtest" data-days="0">Speedtests (all)</button>
+    <button class="btn ghost export-btn" data-table="events" data-days="0">Events (all)</button>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Generated reports</h2>
+  <div class="table-wrap"><table id="reports-table">
+    <thead><tr><th>day</th><th>markdown</th><th>chart</th><th>generated</th></tr></thead>
+    <tbody><tr><td colspan="4" class="muted">loading…</td></tr></tbody>
+  </table></div>
+</section>
+
+<script src="/static/data.js"></script>
+{% endblock %}
